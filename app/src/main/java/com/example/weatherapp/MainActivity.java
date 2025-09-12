@@ -21,7 +21,6 @@ import java.util.*;
 
 public class MainActivity extends AppCompatActivity {
     private TextView dayWeatherWx, dayWeatherTemp, dayWeatherPop, nightWeatherWx, nightWeatherTemp, nightWeatherPop, outdoorSuggestionText;
-    private String suggestionRequest;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,7 +34,6 @@ public class MainActivity extends AppCompatActivity {
         outdoorSuggestionText = findViewById(R.id.outdoorSuggestionText);
 
         fetchWeather("臺北市"); // 或 locationName
-        fetchAIAdvices();
     }
 
     private void fetchWeather(String locationName) {
@@ -48,11 +46,9 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("Weather", "API response error");
                     return;
                 }
-                Log.d("Weather", response.body().toString());
                 // 簡化邏輯：找到特定 location，合併元素時間段，拆日/夜
                 CwbForecastResponse.Records rec = response.body().records;
                 if (rec == null || rec.location == null || rec.location.isEmpty()) return;
-                CwbForecastResponse.Location loc = rec.location.get(0);
 
                 if (response.isSuccessful() && response.body() != null) {
                     dayWeatherWx.setText(WeatherUtils.getTodayDayWeather(response.body(), "Wx"));
@@ -61,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
                     nightWeatherTemp.setText("高溫: " + WeatherUtils.getTodayNightWeather(response.body(), "MaxT") + "低溫: " + WeatherUtils.getTodayDayWeather(response.body(), "MinT"));
                     dayWeatherPop.setText(WeatherUtils.getTodayDayWeather(response.body(), "Pop"));
                     nightWeatherPop.setText(WeatherUtils.getTodayNightWeather(response.body(), "Pop"));
+                    fetchAIAdvices();
                 } else {
                     dayWeatherWx.setText("取得資料失敗");
                     nightWeatherWx.setText("");
@@ -75,7 +72,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void fetchAIAdvices(){
         AiService aiService = AiClient.getService();
-        AiRequest request = new AiRequest("白天" + dayWeatherWx + "晚上" + nightWeatherWx + "，請提供出門建議");
+        String weatherInfo = "白天" + dayWeatherWx.getText() + dayWeatherTemp.getText() + "，晚上" + nightWeatherWx.getText() + dayWeatherTemp.getText();
+        Log.d("Weather", weatherInfo);
+        AiRequest request = new AiRequest( weatherInfo + "，請提供50字內出門建議");
         String GEMINI_MODEL = "gemini-1.5-flash";
 
         aiService.generateContent(GEMINI_MODEL, AiClient.getAiApiKey(), request)
