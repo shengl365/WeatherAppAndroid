@@ -33,3 +33,5 @@
 ├─ res/layout/ # XML 介面
 └─ AndroidManifest.xml
 ```
+<img src="app/src/main/res/Screenshot.png" width= "50%">
+
